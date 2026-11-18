@@ -1,0 +1,4 @@
+[toolchain]
+# Toolchain GNU: include il proprio linker (su questo PC non ci sono i Visual Studio Build Tools).
+channel = "stable-x86_64-pc-windows-gnu"
+profile = "minimal"

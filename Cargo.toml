@@ -1,0 +1,22 @@
+[package]
+name = "swytch"
+version = "2.0.0"
+edition = "2021"
+description = "Switch dell'ingresso del monitor via DDC/CI (VCP 0x60) con hotkey globali e icona nel tray"
+license = "MIT"
+repository = "https://github.com/andreaalcaini/Swytch"
+
+[[bin]]
+name = "Swytch"
+path = "src/main.rs"
+
+# Nessuna dipendenza: solo Win32 diretto.
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+debug = false
