@@ -173,6 +173,8 @@ and align this project's copies with it:
   the app's own hotkeys first (e.g. AltGr+F13, harmless when already on DisplayPort) gives the app the
   right to come to the front.
 - **AltGr is Ctrl+Alt.** QMK/VIA keyboards often send F13+ with AltGr; bare F13 hotkeys never fire then.
+- rustup won't install the toolchain from `rust-toolchain.toml` (its channel names the `-gnu` target): run
+  `rustup toolchain install stable-x86_64-pc-windows-gnu` once; CI does it explicitly.
 - `schtasks /XML` only accepts UTF-16 with a BOM; the XML must say `encoding="UTF-16"`.
 - The Samsung T28E316 on the dev machine has no DDC/CI: "auto" correctly picks the Lenovo R27qe.
 - A 256 px DIB in the .ico would add ~260 KB to the exe: the largest embedded size is 128 px on purpose.

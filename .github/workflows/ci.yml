@@ -22,12 +22,13 @@ jobs:
   check:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Rust toolchain (from rust-toolchain.toml)
+      # rustup refuses to install from a toolchain file whose channel names a target (the runner's
+      # default host is MSVC), so the GNU toolchain is installed explicitly; the file then selects it.
+      - name: Rust toolchain (stable-x86_64-pc-windows-gnu)
         run: |
-          rustup toolchain install
-          if ($LASTEXITCODE -ne 0) { rustup show }
+          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal --component rustfmt,clippy
           rustup show active-toolchain
 
       - uses: Swatinem/rust-cache@v2

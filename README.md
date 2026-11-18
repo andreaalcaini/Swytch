@@ -83,8 +83,9 @@ input and the codes the monitor lists in its *capabilities*.
 
 ## Build
 
-You need [Rust](https://rustup.rs). `rust-toolchain.toml` selects the `stable-x86_64-pc-windows-gnu`
-toolchain, which ships its own linker, so no Visual Studio Build Tools are needed. Win32 is linked with
+You need [Rust](https://rustup.rs) and, once, `rustup toolchain install stable-x86_64-pc-windows-gnu`:
+`rust-toolchain.toml` selects that toolchain, which ships its own linker, so no Visual Studio Build Tools
+are needed (rustup doesn't install it from the file by itself). Win32 is linked with
 `raw-dylib`, without import libraries. `windres` (MinGW binutils, e.g. `winget install BrechtSanders.WinLibs.POSIX.UCRT`)
 embeds the version info and the icon; without it the exe builds without them.
 

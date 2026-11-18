@@ -19,12 +19,13 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Rust toolchain (from rust-toolchain.toml)
+      # rustup refuses to install from a toolchain file whose channel names a target (the runner's
+      # default host is MSVC), so the GNU toolchain is installed explicitly; the file then selects it.
+      - name: Rust toolchain (stable-x86_64-pc-windows-gnu)
         run: |
-          rustup toolchain install
-          if ($LASTEXITCODE -ne 0) { rustup show }
+          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal --component rustfmt,clippy
           rustup show active-toolchain
 
       - name: windres (embeds version info and icon)
@@ -64,7 +65,7 @@ jobs:
           "$hash  Swytch-$v-windows-amd64.exe" | Out-File -Encoding ascii "$exe.sha256"
           "exe=$exe" >> $env:GITHUB_OUTPUT
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Swytch-${{ steps.version.outputs.version }}-windows-amd64
           path: dist/*
