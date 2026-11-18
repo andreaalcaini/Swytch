@@ -62,7 +62,8 @@ jobs:
           $info = (Get-Item $exe).VersionInfo
           if ($info.ProductVersion -ne $v) { throw "Embedded version '$($info.ProductVersion)' is not $v." }
           $hash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  Swytch-$v-windows-amd64.exe" | Out-File -Encoding ascii "$exe.sha256"
+          # LF line end, so `sha256sum -c` works on Linux/macOS too.
+          [IO.File]::WriteAllText("$PWD/$exe.sha256", "$hash  Swytch-$v-windows-amd64.exe`n")
           "exe=$exe" >> $env:GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v7
