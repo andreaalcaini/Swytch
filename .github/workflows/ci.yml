@@ -1,0 +1,46 @@
+# Checks every push to main and every pull request: formatting, clippy (zero warnings), tests.
+# Nothing is built for distribution here: releases come from release.yml on a vX.Y.Z tag.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  SWYTCH_REQUIRE_RESOURCES: "1"
+
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain (from rust-toolchain.toml)
+        run: |
+          rustup toolchain install
+          if ($LASTEXITCODE -ne 0) { rustup show }
+          rustup show active-toolchain
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: windres (embeds version info and icon)
+        shell: pwsh
+        run: ./.github/scripts/find-windres.ps1
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Tests
+        run: cargo test --locked

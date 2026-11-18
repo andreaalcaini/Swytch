@@ -1,0 +1,79 @@
+# Builds and publishes a release when a vX.Y.Z tag is pushed: the tag must match the version in
+# Cargo.toml. A manual run (Actions → Release → Run workflow) only builds the exe and keeps it as
+# a workflow artifact, without publishing anything.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  SWYTCH_REQUIRE_RESOURCES: "1"
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain (from rust-toolchain.toml)
+        run: |
+          rustup toolchain install
+          if ($LASTEXITCODE -ne 0) { rustup show }
+          rustup show active-toolchain
+
+      - name: windres (embeds version info and icon)
+        shell: pwsh
+        run: ./.github/scripts/find-windres.ps1
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $v = (cargo metadata --no-deps --format-version 1 --locked | ConvertFrom-Json).packages[0].version
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$v") {
+            throw "Tag $env:GITHUB_REF_NAME does not match Cargo.toml version $v (run: make version V=x.y.z)."
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Check
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets --locked -- -D warnings
+          cargo test --locked
+
+      - name: Build
+        run: cargo build --release --locked
+
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          $v = '${{ steps.version.outputs.version }}'
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $exe = "dist/Swytch-$v-windows-amd64.exe"
+          Copy-Item target/release/Swytch.exe $exe
+          $info = (Get-Item $exe).VersionInfo
+          if ($info.ProductVersion -ne $v) { throw "Embedded version '$($info.ProductVersion)' is not $v." }
+          $hash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  Swytch-$v-windows-amd64.exe" | Out-File -Encoding ascii "$exe.sha256"
+          "exe=$exe" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Swytch-${{ steps.version.outputs.version }}-windows-amd64
+          path: dist/*
+
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $exe = '${{ steps.package.outputs.exe }}'
+          gh release create $env:GITHUB_REF_NAME $exe "$exe.sha256" --title "Swytch $env:GITHUB_REF_NAME" --generate-notes --verify-tag
