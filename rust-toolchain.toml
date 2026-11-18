@@ -1,4 +1,5 @@
 [toolchain]
-# Toolchain GNU: include il proprio linker (su questo PC non ci sono i Visual Studio Build Tools).
+# GNU toolchain: it ships its own linker, so no Visual Studio Build Tools / Windows SDK are needed.
 channel = "stable-x86_64-pc-windows-gnu"
 profile = "minimal"
+components = ["rustfmt", "clippy"]
